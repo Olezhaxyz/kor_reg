@@ -1,0 +1,37 @@
+@font-face {
+	font-family: 'FontName'; 
+	src: url(AukimLight.otf);
+}
+
+.container-fluid{
+    background-color: #002090;
+}
+
+.home{
+    color: white;
+    margin: 0 0 0 0;
+    font-family: 'FontName';
+    font-size: 30px;
+    padding-top: 0;
+}
+
+.file{
+    margin-bottom: 10px;
+    margin-left: 10px;
+}
+
+.up{
+    display: flex;
+    justify-content: center;
+}
+
+.upload{
+    width: 50%;
+    padding: 5px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: #3749EF;
+    color: white;
+    font-family: 'FontName';
+    font-size: 20px;
+}
