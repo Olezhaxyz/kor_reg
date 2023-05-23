@@ -54,6 +54,8 @@
             <p class="text">F-критерий Фишера: {{ f_score }}</p>
             <p class="text">При уровне значимости:{{ alpha }}</p>
             <p class="text">F - табличное: {{ f_critical }}</p>
+            <input type="submit" value="Скачать pdf" class="btn btn-default" onClick="window.print()">
+            <a href="document.docx" target="_blank">Скачать docx</a>
         </div>
         <div class="col-8">
             <img src="../plot.svg" width="100%">

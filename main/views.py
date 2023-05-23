@@ -1,10 +1,11 @@
+import docx
 import pandas as pd
 import numpy as np
 from django.shortcuts import render
+from docx.shared import Inches
 from matplotlib import pyplot as plt
 from scipy import stats
-from scipy.optimize import curve_fit
-
+from sklearn.metrics import mean_absolute_error
 
 def index(request):
     if request.method == 'POST':
@@ -20,6 +21,7 @@ def index(request):
             df['Y'] = pd.to_numeric(df['Y'], errors='coerce')
             df = df.dropna()
             df = df.round(2)
+
             table = df.to_html(
                 classes='table table-striped table-hover table-bordered table-sm table-responsive text-center')
 
@@ -66,49 +68,24 @@ def index(request):
             # Для расчета нам нужно усредненное значение X и Y.
             mean_y = df['Y'].mean()
             mean_x = df['X'].mean()
-            elasticity = spearman_corr * (mean_y / mean_x)
+            a1, a0 = np.polyfit(df['X'], df['Y'], 1)
+            elasticity = a1 * (mean_x / mean_y)
+
 
             # 6) Средняя ошибка аппроксимации
-            y_pred = spearman_corr * df['X']
-            approx_error = np.mean(np.abs((df['Y'] - y_pred) / df['Y']))
-            # Определяем функцию для аппроксимации (в данном случае линейную)
-            def linear_func(x, a, b):
-                return a * x + b
-
-            # Получаем коэффициенты аппроксимирующей функции
-            popt, pcov = curve_fit(linear_func, df['X'], df['Y'])
-
-            # Считаем значения, полученные из аппроксимирующей функции
-            approx_values = linear_func(df['X'], *popt)
-
-            # Считаем разницу между значениями y и значениями, полученными из аппроксимирующей функции
-            diff = df['Y'] - approx_values
-
-            # Считаем среднее значение разностей
-            #approx_error = np.mean(diff)
+            y_pred = a0 + a1 * df['X']
+            approx_error = mean_absolute_error(df['Y'], y_pred)
 
             # 7) Общая дисперсия
 
             total_var = np.sum((df['Y'] - mean_y)**2)/df_len
 
             # 8) Факторная дисперсия
-            # Построение уравнений регрессии
-            x1 = df['X'].values
-            y2 = df['Y'].values
-
-            a0,a1 = np.polyfit(x1, y2, 1)
-            # Считаем среднее значение признака y для каждого уникального значения признака x
-            x_f= df.round(0)
-            mean_y_by_x = x_f.groupby('X')['Y'].mean()
-
-            # Считаем среднее значение всех средних значений признака y
-            mean_yy = np.mean(mean_y_by_x)
-            np.round(mean_yy)
-            # Вычисляем факторную дисперсию
-            factor_var = np.sum((mean_y_by_x - mean_yy) ** 2) / df_len
+            factor_var =np.sum((y_pred - mean_y)**2)/df_len
 
             # 9) Остаточная дисперсия
-            res_var = total_var - factor_var
+
+            res_var = np.sum((df['Y'] - y_pred)**2)/df_len
 
             # 10) Проверка общей дисперсии
             # Если общая дисперсия равна сумме факторной и остаточной дисперсии, проверка пройдена
@@ -117,10 +94,10 @@ def index(request):
             # 11) Теоретический коэффициент детерминации
             # Коэффициент детерминации R^2 - это квадрат коэффициента корреляции Спирмена
             determination_coef = spearman_corr ** 2
+            determination_coef = np.sqrt(factor_var**2/total_var**2)
 
             # 1) Теоретическое корреляционное отношение
             # Это квадратный корень из коэффициента детерминации
-            determination_coef = corr_coef ** 2
             corr_ratio = np.sqrt(determination_coef)
 
             # 2) Зависимость между коррелированными отношениями
@@ -181,6 +158,43 @@ def index(request):
 
             plt.tight_layout()
             plt.savefig('plot.svg')
+            imagedocx =plt.savefig('plot.png')
+
+            #Сохранение в текстовый формат
+
+            doc = docx.Document()  # create
+            table_docx = doc.add_table(rows=len(df) + 1,
+                                  cols=2)  # создаем таблицу с числом строк, равным количеству строк в файле CSV + 1 (для заголовка), и 2 столбцами
+            table_docx.cell(0, 0).text = 'Курс'  # заполняем ячейки таблицы заголовками
+            table_docx.cell(0, 1).text = 'Газ млрд.кб. м3'
+            for i in range(len(df)):
+                table_docx.cell(i + 1, 0).text = str(df.iloc[i, 0])
+                table_docx.cell(i + 1, 1).text = str(df.iloc[i, 1])
+            doc.add_page_break()
+            doc.add_paragraph('alpha'+ str(alpha)+"\n"+'t_alpha'+str(t_alpha)+"\n"+'spearman_corr'+str(spearman_corr)+"\n"
+                              'corr_level'+str(corr_level)+"\n"+'corr_level2'+str(corr_level2)+"\n"
+                              'corr_level2'+str(elasticity)+"\n"
+                              'corr_level2'+str(approx_error)+"\n"
+                              'corr_level2'+str(total_var)+"\n"
+                              'corr_level2'+str(factor_var)+"\n"
+                              'corr_level2'+str(res_var)+"\n"
+                              'corr_level2'+str(var_check)+"\n"
+                              'corr_level2'+str(determination_coef)+"\n"
+                              'corr_level2'+str(corr_ratio)+"\n"
+                              'corr_level2'+str(std_y)+"\n"
+                              'corr_level2'+str(std_x)+"\n"
+                              'corr_level2'+str(corr_coef)+"\n"
+                              'corr_level2'+str(stderr_corr_coef)+"\n"
+                              'corr_level2'+str(t_score)+"\n"
+                              'corr_level2'+str(p_value)+"\n"
+                              'corr_level2'+str(significance)+"\n"
+                              'corr_level2'+str(rel_level)+"\n"
+                              'corr_level2'+str(f_score)+"\n"
+                              'corr_level2'+str(f_critical))
+            doc.add_page_break()
+            doc.add_picture('plot.png',width=Inches(5.83), height=Inches(8.27))
+
+            doc.save('document.docx')
 
             return render(request, 'success.html', {
                 'table': table,
@@ -207,7 +221,6 @@ def index(request):
                 'rel_level': rel_level,
                 'f_score': f_score,
                 'f_critical': f_critical,
-
             })
 
         else:
