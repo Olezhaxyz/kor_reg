@@ -46,8 +46,11 @@ def index(request):
             t_score = abs(corr_coef) * np.sqrt(len(df) - 2) / np.sqrt(1 - corr_coef ** 2)
             p_value = 2 * (1 - stats.t.cdf(t_score, df=df.shape[0] - 2))
 
-            significance = p_value < 0.05
-
+            significance = p_value < alpha
+            if significance:
+                significance = 'Значим'
+            else:
+                significance ='Не значим'
             # 2) Нахождение табличного значения
             # Для коэффициента корреляции Спирмена воспользуемся критерием Стьюдента
             df_len = len(df)
@@ -64,8 +67,7 @@ def index(request):
                 corr_level2 = 'средняя'
 
             # 5) Эластичность
-            # Эластичность - это отношение процентного изменения в Y к процентному изменению в X.
-            # Для расчета нам нужно усредненное значение X и Y.
+
             mean_y = df['Y'].mean()
             mean_x = df['X'].mean()
             a1, a0 = np.polyfit(df['X'], df['Y'], 1)
@@ -90,10 +92,13 @@ def index(request):
             # 10) Проверка общей дисперсии
             # Если общая дисперсия равна сумме факторной и остаточной дисперсии, проверка пройдена
             var_check = np.isclose(total_var, factor_var + res_var)
+            if var_check:
+                var_check = 'Верно'
+            else:
+                var_check = 'Не верно'
 
             # 11) Теоретический коэффициент детерминации
-            # Коэффициент детерминации R^2 - это квадрат коэффициента корреляции Спирмена
-            determination_coef = spearman_corr ** 2
+
             determination_coef = np.sqrt(factor_var**2/total_var**2)
 
             # 1) Теоретическое корреляционное отношение
@@ -106,6 +111,23 @@ def index(request):
                 rel_level = 'сильная'
             elif abs(corr_ratio) > 0.3:
                 rel_level = 'средняя'
+
+            #Средние ошибки параметров
+            avg_error_a0 = np.sqrt(res_var)/np.sqrt(df_len-2)
+            avg_error_a1 = np.sqrt(res_var) / (std_x * np.sqrt(df_len - 2))
+            #Отношение коэффициента к его средней ошибке
+            t_a0 = a0/avg_error_a0
+            t_a1 = a1 / avg_error_a1
+
+            if t_a0 > 3:
+                check_t_a0 = 'Значим'
+            else:
+                check_t_a0 = 'Не значим'
+
+            if t_a1 > 3:
+                check_t_a1 = 'Значим'
+            else:
+                check_t_a1 = 'Не значим'
 
             # 3) F-критерий Фишера
             f_score = determination_coef / (1 - determination_coef) * (len(df) - 2)
@@ -133,7 +155,6 @@ def index(request):
             x_hyperbolic = np.linspace(x.min(), x.max(), 500)
             hyperbolic_coefs = np.polyfit(1 / x, y, 1)
             y_hyperbolic = np.polyval(hyperbolic_coefs, 1 / x_hyperbolic)
-
             plt.rcParams['lines.markersize'] = 0.8
             # Построение графиков
             fig, ax = plt.subplots(3, 1, figsize=(10, 15))
@@ -158,10 +179,9 @@ def index(request):
 
             plt.tight_layout()
             plt.savefig('plot.svg')
-            imagedocx =plt.savefig('plot.png')
+            plt.savefig('plot.png')
 
             #Сохранение в текстовый формат
-
             doc = docx.Document()  # create
             table_docx = doc.add_table(rows=len(df) + 1,
                                   cols=2)  # создаем таблицу с числом строк, равным количеству строк в файле CSV + 1 (для заголовка), и 2 столбцами
@@ -171,28 +191,33 @@ def index(request):
                 table_docx.cell(i + 1, 0).text = str(df.iloc[i, 0])
                 table_docx.cell(i + 1, 1).text = str(df.iloc[i, 1])
             doc.add_page_break()
-            doc.add_paragraph('alpha'+ str(alpha)+"\n"+'t_alpha'+str(t_alpha)+"\n"+'spearman_corr'+str(spearman_corr)+"\n"
-                              'corr_level'+str(corr_level)+"\n"+'corr_level2'+str(corr_level2)+"\n"
-                              'corr_level2'+str(elasticity)+"\n"
-                              'corr_level2'+str(approx_error)+"\n"
-                              'corr_level2'+str(total_var)+"\n"
-                              'corr_level2'+str(factor_var)+"\n"
-                              'corr_level2'+str(res_var)+"\n"
-                              'corr_level2'+str(var_check)+"\n"
-                              'corr_level2'+str(determination_coef)+"\n"
-                              'corr_level2'+str(corr_ratio)+"\n"
-                              'corr_level2'+str(std_y)+"\n"
-                              'corr_level2'+str(std_x)+"\n"
-                              'corr_level2'+str(corr_coef)+"\n"
-                              'corr_level2'+str(stderr_corr_coef)+"\n"
-                              'corr_level2'+str(t_score)+"\n"
-                              'corr_level2'+str(p_value)+"\n"
-                              'corr_level2'+str(significance)+"\n"
-                              'corr_level2'+str(rel_level)+"\n"
-                              'corr_level2'+str(f_score)+"\n"
-                              'corr_level2'+str(f_critical))
+            doc.add_paragraph('Уровень значимости: '+ str(alpha)+"\n"+'t_alpha'+str(t_alpha)+"\n"+'Коэффициент Спирмена: '+str(spearman_corr)+"\n"
+                              'Зависимость между коррелированными отношениями: '+str(corr_level)+"\n"+'Уровень между признаками: '+str(corr_level2)+"\n"
+                              'Эластичность: '+str(elasticity)+"\n"
+                              'Средняя ошибка аппроксимации: '+str(approx_error)+"\n"
+                              'Общая дисперсия: '+str(total_var)+"\n"
+                              'Факторная дисперсия: '+str(factor_var)+"\n"
+                              'Остаточная дисперсия: '+str(res_var)+"\n"
+                              'Проверка общей дисперсии: '+str(var_check)+"\n"
+                              'Теоретический коэффициент детерминации: '+str(determination_coef)+"\n"
+                              'Теоретическое корреляционное отношение: '+str(corr_ratio)+"\n"
+                              'Среднеквадратичное отклонение Y:'+str(std_y)+"\n"
+                              'Среднеквадратичное отклонение X:'+str(std_x)+"\n"
+                              'Линейный коэффициент корреляции'+str(corr_coef)+"\n"
+                              'Средней ошибки коэффициента корреляции: '+str(stderr_corr_coef)+"\n"
+                              'Коэффициента корреляции на значимость: '+str(significance)+"\n"
+                              'Зависимость между коррелированными отношениями: '+str(rel_level)+"\n"
+                              'F - критерий Фишера: '+str(f_score)+"\n"
+                              'F - табличное: '+str(f_critical) +"\n"
+                              'Средние ошибки параметров:'+'a0: '+str(avg_error_a0)+'a1: '+str(avg_error_a1)+ "\n"
+                              't a0'+str(t_a0) +
+                              ' '+str(check_t_a0) + "\n"
+                              't a1'+str(t_a1) +
+                              ' '+str(check_t_a1) + "\n"
+                              )
+
             doc.add_page_break()
-            doc.add_picture('plot.png',width=Inches(5.83), height=Inches(8.27))
+            doc.add_picture('plot.png', width=Inches(5.83), height=Inches(8.27))
 
             doc.save('document.docx')
 
@@ -221,9 +246,17 @@ def index(request):
                 'rel_level': rel_level,
                 'f_score': f_score,
                 'f_critical': f_critical,
+                't_a0': t_a0,
+                't_a1': t_a1,
+                'avg_error_a1': avg_error_a1,
+                'avg_error_a0': avg_error_a0,
+                'check_t_a0': check_t_a0,
+                'check_t_a1': check_t_a1,
             })
 
         else:
             return render(request, 'upload.html')
     else:
         return render(request, 'upload.html')
+
+
