@@ -51,22 +51,22 @@ def index(request):
                 significance = 'Значим'
             else:
                 significance ='Не значим'
-            # 2) Нахождение табличного значения
-            # Для коэффициента корреляции Спирмена воспользуемся критерием Стьюдента
+            # Нахождение табличного значения
+            # Для коэффициента корреляции Спирмена нужен критерием Стьюдента
             df_len = len(df)
             t_alpha = stats.t.ppf(1 - alpha / 2, df_len - 2)
 
-            # 3) Коэффициент Спирмена
+            # Коэффициент Спирмена
             spearman_corr = df['X'].corr(df['Y'], method='spearman')
 
-            # 4) Уровень между признаками
+            # Уровень между признаками
             corr_level2 = 'слабая'
             if abs(spearman_corr) > 0.7:
                 corr_level2 = 'сильная'
             elif abs(spearman_corr) > 0.3:
                 corr_level2 = 'средняя'
 
-            # 5) Эластичность
+            # Эластичность
 
             mean_y = df['Y'].mean()
             mean_x = df['X'].mean()
@@ -74,22 +74,22 @@ def index(request):
             elasticity = a1 * (mean_x / mean_y)
 
 
-            # 6) Средняя ошибка аппроксимации
+            #Средняя ошибка аппроксимации
             y_pred = a0 + a1 * df['X']
             approx_error = mean_absolute_error(df['Y'], y_pred)
 
-            # 7) Общая дисперсия
+            # Общая дисперсия
 
             total_var = np.sum((df['Y'] - mean_y)**2)/df_len
 
-            # 8) Факторная дисперсия
+            # Факторная дисперсия
             factor_var =np.sum((y_pred - mean_y)**2)/df_len
 
-            # 9) Остаточная дисперсия
+            #Остаточная дисперсия
 
             res_var = np.sum((df['Y'] - y_pred)**2)/df_len
 
-            # 10) Проверка общей дисперсии
+            # Проверка общей дисперсии
             # Если общая дисперсия равна сумме факторной и остаточной дисперсии, проверка пройдена
             var_check = np.isclose(total_var, factor_var + res_var)
             if var_check:
@@ -97,15 +97,14 @@ def index(request):
             else:
                 var_check = 'Не верно'
 
-            # 11) Теоретический коэффициент детерминации
+            # Теоретический коэффициент детерминации
 
             determination_coef = np.sqrt(factor_var**2/total_var**2)
 
-            # 1) Теоретическое корреляционное отношение
-            # Это квадратный корень из коэффициента детерминации
+            #Теоретическое корреляционное отношение
             corr_ratio = np.sqrt(determination_coef)
 
-            # 2) Зависимость между коррелированными отношениями
+            #Зависимость между коррелированными отношениями
             rel_level = 'слабая'
             if abs(corr_ratio) > 0.7:
                 rel_level = 'сильная'
@@ -129,10 +128,10 @@ def index(request):
             else:
                 check_t_a1 = 'Не значим'
 
-            # 3) F-критерий Фишера
+            #F-критерий Фишера
             f_score = determination_coef / (1 - determination_coef) * (len(df) - 2)
 
-            # 4) При заданном уровне значимости считает Fтабличное
+            #При заданном уровне значимости считает F табличное
             f_critical = stats.f.ppf(1 - alpha, 1, len(df) - 2)
 
             # Убедимся, что X не равен 0 для гиперболической регрессии
@@ -162,20 +161,20 @@ def index(request):
             ax[0].scatter(x, y, color='blue')
             ax[0].plot(x, y_linear, color='red')
             ax[0].set_title('Линейная регрессия')
-            ax[0].set_xlabel('X')
-            ax[0].set_ylabel('Y')
+            ax[0].set_xlabel('Курс $')
+            ax[0].set_ylabel('Объем млдр.м3')
 
             ax[1].scatter(x, y, color='blue')
             ax[1].plot(x_quadratic, y_quadratic, color='red')
             ax[1].set_title('Параболическая регрессия')
-            ax[1].set_xlabel('X')
-            ax[1].set_ylabel('Y')
+            ax[1].set_xlabel('Курс $')
+            ax[1].set_ylabel('Объем млдр.м3')
 
             ax[2].scatter(x, y, color='blue')
             ax[2].plot(x_hyperbolic, y_hyperbolic, color='red')
             ax[2].set_title('Гиперболическая регрессия')
-            ax[2].set_xlabel('X')
-            ax[2].set_ylabel('Y')
+            ax[2].set_xlabel('Курс $')
+            ax[2].set_ylabel('Объем млдр.м3')
 
             plt.tight_layout()
             plt.savefig('plot.svg')
@@ -184,14 +183,14 @@ def index(request):
             #Сохранение в текстовый формат
             doc = docx.Document()  # create
             table_docx = doc.add_table(rows=len(df) + 1,
-                                  cols=2)  # создаем таблицу с числом строк, равным количеству строк в файле CSV + 1 (для заголовка), и 2 столбцами
-            table_docx.cell(0, 0).text = 'Курс'  # заполняем ячейки таблицы заголовками
+                                  cols=2)
+            table_docx.cell(0, 0).text = 'Курс'
             table_docx.cell(0, 1).text = 'Газ млрд.кб. м3'
             for i in range(len(df)):
                 table_docx.cell(i + 1, 0).text = str(df.iloc[i, 0])
                 table_docx.cell(i + 1, 1).text = str(df.iloc[i, 1])
             doc.add_page_break()
-            doc.add_paragraph('Уровень значимости: '+ str(alpha)+"\n"+'t_alpha'+str(t_alpha)+"\n"+'Коэффициент Спирмена: '+str(spearman_corr)+"\n"
+            textfile = ('Уровень значимости: '+ str(alpha)+"\n"+'Критерий Стьюдента: '+str(t_alpha)+"\n"+'Коэффициент Спирмена: '+str(spearman_corr)+"\n"
                               'Зависимость между коррелированными отношениями: '+str(corr_level)+"\n"+'Уровень между признаками: '+str(corr_level2)+"\n"
                               'Эластичность: '+str(elasticity)+"\n"
                               'Средняя ошибка аппроксимации: '+str(approx_error)+"\n"
@@ -213,9 +212,9 @@ def index(request):
                               't a0'+str(t_a0) +
                               ' '+str(check_t_a0) + "\n"
                               't a1'+str(t_a1) +
-                              ' '+str(check_t_a1) + "\n"
+                              ' '+str(check_t_a1) + "\n")
+            doc.add_paragraph(textfile
                               )
-
             doc.add_page_break()
             doc.add_picture('plot.png', width=Inches(5.83), height=Inches(8.27))
 

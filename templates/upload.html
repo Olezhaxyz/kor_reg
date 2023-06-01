@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Корреляционно-регрессионный анализ</title>
     <link rel="stylesheet" href="{% static "css/style_upload.css"%}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
@@ -21,17 +21,21 @@
     </div>
   </div>
 </nav>
+<div class="title">
+<p class="name">Корреляционно-регрессионный анализ</p>
+<p class="definition">Корреляционно-регрессионный анализ – это методы математической статистики, позволяющие выявлять связь между двумя величинами, значения которых получают в результате статистических наблюдений. Основная задача корреляционного анализа – оценивание тесноты связи между величинами, а регрессионного – установление ее вида</p>
+<p class="area">Областью применения программы является проведение корреляционно-регрессионного анализа курса валют и количества экспорта природного газа в России, а так же определения влияния задействованных факторов. Для дальнейшего применения в обработке статистических данных для получения прогнозных значений.</p>
+</div>
 <form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <input class="file" type="file" name="file">
-    <input class="up" type="submit" value="Upload">
-    <label for="value">Выберите значение уровня значимости</label>
+    <input class="up" type="submit" value="Загрузить">
+    <label class="lab" for="value">Выберите значение уровня значимости</label>
                  <select id="value" name="value" required>
                     <option value=0.05>0.05</option>
                     <option value="0.01">0.01</option>
                     <option value="0.001">0.001</option>
                  </select>
 </form>
-
 </body>
 </html>

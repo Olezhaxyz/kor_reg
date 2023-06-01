@@ -1,8 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Корреляционно-регрессионный анализ</title>
+    <link rel="stylesheet" type="text/css" href="{% static "css/style_success.css"%}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
@@ -11,60 +13,91 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <style>
-    .grafiki {
-        width: 100%;
-    }
-
     .text {
         font-size: 20px;
     }
 </style>
 <body>
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-    <div class="container-fluid">
-        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
-                <a class="nav-link" aria-current="page" href="{% url 'index' %}">Home</a>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    <a class="nav-link" aria-current="page" href="{% url 'index' %}"><p class="home">Home</p></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div id="save" class="container" style="margin-top: 3rem">
+        <div class="row " style="overflow: auto;">
+            <input type="checkbox" class="read-more-checker" id="read-more-checker" />
+            <div class="limiter">
+                <div class="tablebl">
+                    <p class="logosma">Исходные данные</p>
+                    {{ table|safe }}
+                </div>
+                <div class="bottom"></div>
+            </div>
+            <label for="read-more-checker" class="read-more-button"></label>
+            <div class="col-4">
+                <div class="block" title="Для измерения тесноты связи между двумя количественными признаками х и у часто используется линейный коэффициент корреляции r.">
+                    <p class="logosma">Линейный коэффицент корреляции</p>
+                    <p class="text">Среднеквадратичное отклонение: <br>Y: {{ std_y }}, <br/>X: {{ std_x }}</p>
+                    <p class="text">Линейный коэффициент корреляции: {{ corr_coef }}</p>
+                    <p class="text">Зависимость между коррелированными отношениями: {{ corr_level }}</p>
+                </div>
+                <div class="block1" title="Оценка значимости линейного коэффициента корреляции основана на сопоставлении значения r с его средней квадратической ошибкой">
+                    <p class="logosma">Проверка на значимость</p>
+                    <p class="text">Средней ошибки коэффициента корреляции: {{ stderr_corr_coef }}</p>
+                    <p class="text">Коэффициента корреляции на значимость: {{ significance }}</p>
+                    <p class="text">При уровне значимости:{{ alpha }}</p>
+                    <p class="text">Нахождение табличного значения: {{ t_alpha }}</p>
+                </div>
+                <div class="block" title="Для расчета коэффициента Спирмена значения признаков х и у нумеруют (отдельно) в порядке возрастания от 1 до n, т.е. им присваивают определённый ранг (n). Для каждой пары рангов находят их разность и квадраты этой разности суммируют.">
+                    <p class="logosma">Коэффицент корреляции рангов Спирмена</p>
+                    <p class="text">Коэффициент Спирмена: {{ spearman_corr }}</p>
+                    <p class="text">Уровень между признаками: {{ corr_level2 }}</p>
+                </div>
+                <div class="block" title="Уравнение регрессии определяет, каким будет среднее значениерезультативного признака у при произвольном значении факторного признака х, если остальные факторы не учитывать.">
+                    <p class="logosma">Уравнение регрессии</p>
+                    <p class="text">Эластичность: {{ elasticity }}</p>
+                    <p class="text">Средняя ошибка аппроксимации: {{ approx_error }}</p>
+                    <p class="text">Общая дисперсия: {{ total_var }}</p>
+                    <p class="text">Факторная дисперсия: {{ factor_var }}</p>
+                    <p class="text">Остаточная дисперсия: {{ res_var }}</p>
+                    <p class="text">Проверка общей дисперсии: {{ var_check }}</p>
+                    <p class="text">Теоретический коэффициент детерминации: {{ determination_coef }}</p>
+                    <p class="text">Теоретическое корреляционное отношение: {{ corr_ratio }}</p>
+                    <p class="text">Зависимость между коррелированными отношениями: {{ rel_level }}</p>
+                </div>
+                <div class="block" title="Проверка значимости уравнения регрессии в целом, т.е. проверка адекватности модели осуществляется с помощью F-критерия Фишера. F-критерий представляет собой отношение факторной дисперсии результативного признака к остаточной, каждая из которых рассчитана на одну степень свободы.">
+                    <p class="logosma">Проверка регрессионной модели на адекватность</p>
+                    <p class="text">Средние ошибки параметров: <br>a0: {{ avg_error_a0 }} <br>a1: {{ avg_error_a1 }}</p>
+                    <p class="text">Отношение коэффициента к его средней ошибке: </p>
+                    <p class="text">t a0: {{ t_a0 }} {{ check_t_a0 }}<br> t a1: {{ t_a1 }} {{ check_t_a1 }}<br></p>
+                    <p class="text">F-критерий Фишера: {{ f_score }}</p>
+                    <p class="text">При уровне значимости:{{ alpha }}</p>
+                    <p class="text">F - табличное: {{ f_critical }}</p>
+                </div>
+            </div>
+            <div class="col-8">
+                <img alt="Графики" src="../plot.svg" width="100%">
+                <div class="noprint">
+                <img src="../snake.webp" alt="" class="snake">
+                </div>
             </div>
         </div>
     </div>
-</nav>
-<div class="container" style="margin-top: 3rem">
-    <div class="row " style="overflow: auto;">
-        {{ table|safe }}
-        <div class="col-4">
-            <p class="text">Среднеквадратичное отклонение: <br>Y: {{ std_y }}, X: {{ std_x }}</p>
-            <p class="text">Линейный коэффициент корреляции: {{ corr_coef }}</p>
-            <p class="text">Зависимость между коррелированными отношениями: {{ corr_level }}</p>
-            <p class="text">Средней ошибки коэффициента корреляции: {{ stderr_corr_coef }}</p>
-            <p class="text">Коэффициента корреляции на значимость: {{ significance }}</p>
-            <p class="text">При уровне значимости:{{ alpha }}</p>
-            <p class="text">Нахождение табличного значения: {{ t_alpha }}</p>
-            <p class="text">Коэффициент Спирмена: {{ spearman_corr }}</p>
-            <p class="text">Уровень между признаками: {{ corr_level2 }}</p>
-            <p class="text">Эластичность: {{ elasticity }}</p>
-            <p class="text">Средняя ошибка аппроксимации: {{ approx_error }}</p>
-            <p class="text">Общая дисперсия: {{ total_var }}</p>
-            <p class="text">Факторная дисперсия: {{ factor_var }}</p>
-            <p class="text">Остаточная дисперсия: {{ res_var }}</p>
-            <p class="text">Проверка общей дисперсии: {{ var_check }}</p>
-            <p class="text">Теоретический коэффициент детерминации: {{ determination_coef }}</p>
-            <p class="text">Теоретическое корреляционное отношение: {{ corr_ratio }}</p>
-            <p class="text">Зависимость между коррелированными отношениями: {{ rel_level }}</p>
-            <p class="text">Средние ошибки параметров: <br>a0: {{ avg_error_a0 }} <br>a1: {{ avg_error_a1 }}</p>
-            <p class="text">Отношение коэффициента к его средней ошибке: </p>
-            <p class="text">t a0: {{ t_a0 }} {{ check_t_a0 }}<br> t a1: {{ t_a1 }} {{ check_t_a1 }}<br></p>
-            <p class="text">F-критерий Фишера: {{ f_score }}</p>
-            <p class="text">При уровне значимости:{{ alpha }}</p>
-            <p class="text">F - табличное: {{ f_critical }}</p>
-            <input type="submit" value="Скачать pdf" class="btn btn-default" onClick="window.print()">
-            <a href="document.docx" target="_blank">Скачать docx</a>
+    <div class="noprint">
+        <div class="buttons">
+        <div class="up">
+            <button class="decor" onclick="window.print()">Скачать PDF</button>
         </div>
-        <div class="col-8">
-            <img src="../plot.svg" width="100%">
+        <div class="up">
+            <a class="decordocx" href="document.docx" target="_blank">
+                <p class="updocxword">Скачать DOCX</p>
+            </a>
+        </div>
         </div>
     </div>
-</div>
-
 </body>
 </html>

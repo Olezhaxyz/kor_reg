@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-%^x3#wvx1_ndh0v^&e9!_suy^p@2lnx+#8_4$8-93+2=njp%n^
 DEBUG = True
 
 ALLOWED_HOSTS = []
-CSRF_TRUSTED_ORIGINS = ['https://3570-92-242-51-145.ngrok-free.app', 'https://*.127.0.0.1:8000']
+CSRF_TRUSTED_ORIGINS = ['https://26f6-92-242-51-145.ngrok-free.app', 'https://*.127.0.0.1:8000']
 
 # Application definition
 
@@ -198,11 +198,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 #STATIC_ROOT = "/home/oleeex/PycharmProjects/kor_reg/static/"
-
-STATIC_URL = 'static/'
+STATIC_ROOT = '/static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-    '/home/oleeex/PycharmProjects/kor_reg/static/',
+    os.path.join(BASE_DIR, 'static/'),
     ]
 
 # Default primary key field type
