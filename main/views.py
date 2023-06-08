@@ -42,19 +42,24 @@ def index(request):
             # вычисление средней ошибки коэффициента корреляции
             stderr_corr_coef = (1 - corr_coef ** 2) / (np.sqrt(len(df)))
 
+            # нужен критерий Стьюдента
+            df_len = len(df)
+            t_alpha = stats.t.ppf(1 - alpha / 2, df_len - 2)
+
             # проверка коэффициента корреляции на значимость
             t_score = abs(corr_coef) * np.sqrt(len(df) - 2) / np.sqrt(1 - corr_coef ** 2)
             p_value = 2 * (1 - stats.t.cdf(t_score, df=df.shape[0] - 2))
+
+            if len(df)>50:
+                p_value = (1-corr_coef**2)/(np.sqrt(len(df)))
+            elif len(df)<30:
+                p_value = np.sqrt(1-corr_coef**2)/(np.sqrt(len(df)-2))
 
             significance = p_value < alpha
             if significance:
                 significance = 'Значим'
             else:
                 significance ='Не значим'
-            # Нахождение табличного значения
-            # Для коэффициента корреляции Спирмена нужен критерием Стьюдента
-            df_len = len(df)
-            t_alpha = stats.t.ppf(1 - alpha / 2, df_len - 2)
 
             # Коэффициент Спирмена
             spearman_corr = df['X'].corr(df['Y'], method='spearman')
@@ -134,6 +139,11 @@ def index(request):
             #При заданном уровне значимости считает F табличное
             f_critical = stats.f.ppf(1 - alpha, 1, len(df) - 2)
 
+            if f_score > f_critical:
+                f_check = 'Значим'
+            else:
+                f_check = 'Не значим'
+
             # Убедимся, что X не равен 0 для гиперболической регрессии
             df = df[df['X'] != 0]
 
@@ -207,7 +217,7 @@ def index(request):
                               'Коэффициента корреляции на значимость: '+str(significance)+"\n"
                               'Зависимость между коррелированными отношениями: '+str(rel_level)+"\n"
                               'F - критерий Фишера: '+str(f_score)+"\n"
-                              'F - табличное: '+str(f_critical) +"\n"
+                              'F - табличное: '+str(f_critical) +"\n" +str(f_check)+"\n"
                               'Средние ошибки параметров:'+'a0: '+str(avg_error_a0)+'a1: '+str(avg_error_a1)+ "\n"
                               't a0'+str(t_a0) +
                               ' '+str(check_t_a0) + "\n"
@@ -251,6 +261,7 @@ def index(request):
                 'avg_error_a0': avg_error_a0,
                 'check_t_a0': check_t_a0,
                 'check_t_a1': check_t_a1,
+                'f_check':f_check,
             })
 
         else:
